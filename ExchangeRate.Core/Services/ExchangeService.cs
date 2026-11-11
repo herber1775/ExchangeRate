@@ -25,8 +25,7 @@ public class ExchangeService(ICurrencyRateRepository repository) : IExchangeServ
         var to = request.ToCurrency.ToUpperInvariant();
         var now = DateTime.UtcNow;
 
-        // Se guarda el par y su inverso para que ambos sentidos queden consistentes
-        // (si 1 USD = 2 PEN, entonces 1 PEN = 0.5 USD).
+        // Se guarda también el inverso (1 USD = 2 PEN → 1 PEN = 0.5 USD).
         var inverseRate = Math.Round(1m / request.Rate, 6, MidpointRounding.AwayFromZero);
         await SaveRateAsync(from, to, request.Rate, now, ct);
         await SaveRateAsync(to, from, inverseRate, now, ct);
@@ -35,7 +34,6 @@ public class ExchangeService(ICurrencyRateRepository repository) : IExchangeServ
         return new UpdateRateResponse(from, to, request.Rate, now);
     }
 
-    // Si el par existe se actualiza; si no, se crea.
     private async Task SaveRateAsync(string from, string to, decimal value, DateTime now, CancellationToken ct)
     {
         var rate = await repository.GetForUpdateAsync(from, to, ct);
