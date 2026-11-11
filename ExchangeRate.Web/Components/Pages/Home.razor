@@ -1,0 +1,174 @@
+@page "/"
+@inject AuthState Auth
+@inject ExchangeApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Conversor de monedas</PageTitle>
+
+<h2 class="mb-4">Conversor de monedas</h2>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-3">Convertir monto</h5>
+
+                <EditForm Model="convertForm" OnValidSubmit="ConvertAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label">Monto</label>
+                        <InputNumber class="form-control" @bind-Value="convertForm.Amount" />
+                        <ValidationMessage For="() => convertForm.Amount" />
+                    </div>
+
+                    <div class="row g-2 align-items-start mb-3">
+                        <div class="col">
+                            <label class="form-label">De</label>
+                            <InputText class="form-control text-uppercase" maxlength="3" @bind-Value="convertForm.FromCurrency" />
+                            <ValidationMessage For="() => convertForm.FromCurrency" />
+                        </div>
+                        <div class="col-auto pt-4">
+                            <button type="button" class="btn btn-outline-secondary mt-1" title="Intercambiar" @onclick="Swap">⇄</button>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">A</label>
+                            <InputText class="form-control text-uppercase" maxlength="3" @bind-Value="convertForm.ToCurrency" />
+                            <ValidationMessage For="() => convertForm.ToCurrency" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" disabled="@convertBusy">
+                        @(convertBusy ? "Convirtiendo..." : "Convertir")
+                    </button>
+                </EditForm>
+
+                @if (convertError is not null)
+                {
+                    <div class="alert alert-danger mt-3 mb-0">@convertError</div>
+                }
+
+                @if (convertResult is not null)
+                {
+                    <div class="result-box mt-3">
+                        <div class="result-main">
+                            @convertResult.Amount.ToString("N2") @convertResult.FromCurrency =
+                            <strong>@convertResult.ConvertedAmount.ToString("N2") @convertResult.ToCurrency</strong>
+                        </div>
+                        <div class="text-muted small">
+                            Tipo de cambio: 1 @convertResult.FromCurrency = @convertResult.ExchangeRate.ToString("0.######") @convertResult.ToCurrency
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-3">Actualizar tipo de cambio</h5>
+
+                <EditForm Model="rateForm" OnValidSubmit="UpdateRateAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            <label class="form-label">Moneda origen</label>
+                            <InputText class="form-control text-uppercase" maxlength="3" @bind-Value="rateForm.FromCurrency" />
+                            <ValidationMessage For="() => rateForm.FromCurrency" />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Moneda destino</label>
+                            <InputText class="form-control text-uppercase" maxlength="3" @bind-Value="rateForm.ToCurrency" />
+                            <ValidationMessage For="() => rateForm.ToCurrency" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de cambio</label>
+                        <InputNumber class="form-control" @bind-Value="rateForm.Rate" />
+                        <ValidationMessage For="() => rateForm.Rate" />
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100" disabled="@rateBusy">
+                        @(rateBusy ? "Guardando..." : "Guardar")
+                    </button>
+                </EditForm>
+
+                @if (rateError is not null)
+                {
+                    <div class="alert alert-danger mt-3 mb-0">@rateError</div>
+                }
+
+                @if (rateResult is not null)
+                {
+                    <div class="alert alert-success mt-3 mb-0">
+                        Actualizado: 1 @rateResult.FromCurrency = @rateResult.Rate.ToString("0.######") @rateResult.ToCurrency
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly ConvertForm convertForm = new();
+    private ConvertResponse? convertResult;
+    private string? convertError;
+    private bool convertBusy;
+
+    private readonly UpdateRateForm rateForm = new();
+    private UpdateRateResponse? rateResult;
+    private string? rateError;
+    private bool rateBusy;
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsAuthenticated)
+            Nav.NavigateTo("login");
+    }
+
+    private void Swap() =>
+        (convertForm.FromCurrency, convertForm.ToCurrency) = (convertForm.ToCurrency, convertForm.FromCurrency);
+
+    private async Task ConvertAsync()
+    {
+        convertBusy = true;
+        convertError = null;
+        convertResult = null;
+
+        var result = await Api.ConvertAsync(
+            new ConvertRequest(convertForm.Amount, convertForm.FromCurrency, convertForm.ToCurrency));
+        convertBusy = false;
+
+        if (result.SessionExpired)
+        {
+            Nav.NavigateTo("login");
+            return;
+        }
+
+        convertError = result.Error;
+        convertResult = result.Value;
+    }
+
+    private async Task UpdateRateAsync()
+    {
+        rateBusy = true;
+        rateError = null;
+        rateResult = null;
+
+        var result = await Api.UpdateRateAsync(
+            new UpdateRateRequest(rateForm.FromCurrency, rateForm.ToCurrency, rateForm.Rate));
+        rateBusy = false;
+
+        if (result.SessionExpired)
+        {
+            Nav.NavigateTo("login");
+            return;
+        }
+
+        rateError = result.Error;
+        rateResult = result.Value;
+    }
+}
