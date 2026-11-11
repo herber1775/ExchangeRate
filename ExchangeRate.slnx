@@ -1,4 +1,5 @@
 ﻿<Solution>
   <Project Path="ExchangeRate.Core/ExchangeRate.Core.csproj" />
   <Project Path="ExchangeRate.Infrastructure/ExchangeRate.Infrastructure.csproj" />
+  <Project Path="ExchangeRate/ExchangeRate.csproj" />
 </Solution>

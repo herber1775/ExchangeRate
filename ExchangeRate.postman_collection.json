@@ -1,0 +1,92 @@
+{
+  "info": {
+    "name": "ExchangeRate API",
+    "description": "Reto técnico .NET. Ejecutar primero 'Login': guarda el token en la variable {{token}}. baseUrl: 8080 (Docker) o 5089 (dotnet run).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login correcto', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('token', pm.response.json().token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+      }
+    },
+    {
+      "name": "2. Convertir monto (USD -> PEN)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Conversión correcta', () => pm.response.to.have.status(200));",
+              "pm.test('Devuelve monto convertido', () => pm.expect(pm.response.json().convertedAmount).to.be.a('number'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"amount\": 100,\n  \"fromCurrency\": \"USD\",\n  \"toCurrency\": \"PEN\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/exchange/convert", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "convert"] }
+      }
+    },
+    {
+      "name": "3. Convertir monto (PEN -> USD)",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"amount\": 100,\n  \"fromCurrency\": \"PEN\",\n  \"toCurrency\": \"USD\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/exchange/convert", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "convert"] }
+      }
+    },
+    {
+      "name": "4. Actualizar tipo de cambio (opcional)",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"fromCurrency\": \"USD\",\n  \"toCurrency\": \"PEN\",\n  \"rate\": 3.80\n}" },
+        "url": { "raw": "{{baseUrl}}/api/exchange/rate", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "rate"] }
+      }
+    },
+    {
+      "name": "5. Sin token (debe dar 401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": ["pm.test('Rechazado sin token', () => pm.response.to.have.status(401));"] }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"amount\": 100,\n  \"fromCurrency\": \"USD\",\n  \"toCurrency\": \"PEN\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/exchange/convert", "host": ["{{baseUrl}}"], "path": ["api", "exchange", "convert"] }
+      }
+    }
+  ]
+}
