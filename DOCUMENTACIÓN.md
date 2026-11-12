@@ -110,7 +110,7 @@ Restricción: índice **único** sobre (`FromCurrency`, `ToCurrency`).
 
 ## 3. Endpoints
 
-Base URL: `http://localhost:8080` (Docker) o `http://localhost:5089` (`dotnet run`).
+Base URL: `http://localhost:8080` (con Docker o con `dotnet run`, usan el mismo puerto).
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -199,7 +199,7 @@ docker compose down              # detener y eliminar el contenedor
 
 ### Sin Docker
 ```bash
-dotnet run --project ExchangeRate/ExchangeRate.csproj --urls http://localhost:5089
+dotnet run --project ExchangeRate/ExchangeRate.csproj --launch-profile http   # http://localhost:8080
 ```
 
 ### Configuración (`appsettings.json`, sección `Auth`)
@@ -215,11 +215,17 @@ En Docker, la clave se sobrescribe con la variable `AUTH_KEY` (`Auth__Key` en el
 
 ### Front (Blazor Server)
 ```bash
-docker compose up -d   # la API debe estar corriendo en http://localhost:8080
-dotnet run --project ExchangeRate.Web/ExchangeRate.Web.csproj   # abre http://localhost:5242
+# Con Docker (API + Web):
+docker compose up -d --build        # API en :8080, Web en http://localhost:5242
+
+# Sin Docker (dos terminales):
+dotnet run --project ExchangeRate/ExchangeRate.csproj --launch-profile http          # API en :8080
+dotnet run --project ExchangeRate.Web/ExchangeRate.Web.csproj --launch-profile http  # Web en :5242
 ```
-La URL de la API se configura en `ExchangeRate.Web/appsettings.json` → `Api:BaseUrl`
-(cambiar a `http://localhost:5089` si la API se ejecuta con `dotnet run`).
+Local y Docker usan los mismos puertos (API `8080`, Web `5242`), por lo que `Api:BaseUrl` en
+`ExchangeRate.Web/appsettings.json` (`http://localhost:8080`) funciona en ambos modos. No se pueden
+usar los dos modos a la vez porque comparten puertos. En Docker, el compose lo sobrescribe con
+`http://exchangerate-api:8080`.
 
 ### Postman
 

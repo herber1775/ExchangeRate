@@ -10,3 +10,17 @@ services:
       ASPNETCORE_HTTP_PORTS: "8080"
       # Sobrescribe la clave de appsettings.json (mínimo 32 caracteres).
       Auth__Key: ${AUTH_KEY:-clave-secreta-para-docker-cambiar-en-produccion-0123456789}
+
+  exchangerate-web:
+    build:
+      context: .
+      dockerfile: ExchangeRate.Web/Dockerfile
+    depends_on:
+      - exchangerate-api
+    ports:
+      - "5242:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      # Dentro de la red de Docker la API se alcanza por el nombre del servicio.
+      Api__BaseUrl: http://exchangerate-api:8080
