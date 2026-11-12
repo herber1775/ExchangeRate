@@ -17,6 +17,8 @@ public record ConvertResponse(
     string ToCurrency,
     decimal ExchangeRate);
 
+public record CurrencyDto(string Code, string Name);
+
 public record UpdateRateRequest(
     [Required, RegularExpression("^[A-Za-z]{3}$", ErrorMessage = "La moneda debe ser un código de 3 letras (ej. USD).")]
     string FromCurrency,

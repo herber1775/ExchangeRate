@@ -29,11 +29,23 @@ public class ExchangeApiClient(HttpClient http, AuthState auth)
         return await PostAsync<UpdateRateRequest, UpdateRateResponse>("api/exchange/rate", request, authorize: true);
     }
 
+    public async Task<ApiResult<List<CurrencyDto>>> GetCurrenciesAsync()
+    {
+        return await SendAsync<List<CurrencyDto>>(HttpMethod.Get, "api/exchange/currencies", null, authorize: true);
+    }
+
     private async Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest body, bool authorize)
+    {
+        return await SendAsync<TResponse>(HttpMethod.Post, url, body, authorize);
+    }
+
+    private async Task<ApiResult<TResponse>> SendAsync<TResponse>(HttpMethod method, string url, object? body, bool authorize)
     {
         try
         {
-            using var message = new HttpRequestMessage(HttpMethod.Post, url) { Content = JsonContent.Create(body) };
+            using var message = new HttpRequestMessage(method, url);
+            if (body is not null)
+                message.Content = JsonContent.Create(body, body.GetType());
             if (authorize && auth.Token is not null)
                 message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
 

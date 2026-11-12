@@ -10,6 +10,12 @@ namespace ExchangeRate.Controllers;
 [Route("api/[controller]")]
 public class ExchangeController(IExchangeService exchangeService) : ControllerBase
 {
+    [HttpGet("currencies")]
+    public async Task<ActionResult<IReadOnlyList<CurrencyDto>>> GetCurrencies(CancellationToken ct)
+    {
+        return Ok(await exchangeService.GetCurrenciesAsync(ct));
+    }
+
     [HttpPost("convert")]
     public async Task<ActionResult<ConvertResponse>> Convert(ConvertRequest request, CancellationToken ct)
     {

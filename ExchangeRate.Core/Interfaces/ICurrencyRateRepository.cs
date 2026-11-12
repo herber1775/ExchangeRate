@@ -10,6 +10,15 @@ public interface ICurrencyRateRepository
     // Para modificar la entidad y luego llamar a SaveChangesAsync.
     Task<CurrencyRate?> GetForUpdateAsync(string from, string to, CancellationToken ct = default);
 
+    // SOLO: Todos los tipos de cambio que tienen a esta moneda como origen.
+    Task<IReadOnlyList<CurrencyRate>> GetRatesFromAsync(string from, CancellationToken ct = default);
+
+    // SOLO: Monedas disponibles, ordenadas por código.
+    Task<IReadOnlyList<Currency>> GetCurrenciesAsync(CancellationToken ct = default);
+
+    // SOLO: Registra la moneda (con su código como nombre) si todavía no existe.
+    Task EnsureCurrencyAsync(string code, CancellationToken ct = default);
+
     Task AddAsync(CurrencyRate rate, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
 }

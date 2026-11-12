@@ -20,6 +20,28 @@ public class CurrencyRateRepository(AppDbContext db) : ICurrencyRateRepository
             .FirstOrDefaultAsync(x => x.FromCurrency == from && x.ToCurrency == to, ct);
     }
 
+    public async Task<IReadOnlyList<CurrencyRate>> GetRatesFromAsync(string from, CancellationToken ct = default)
+    {
+        return await db.CurrencyRates
+            .AsNoTracking()
+            .Where(x => x.FromCurrency == from)
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Currency>> GetCurrenciesAsync(CancellationToken ct = default)
+    {
+        return await db.Currencies
+            .AsNoTracking()
+            .OrderBy(x => x.Code)
+            .ToListAsync(ct);
+    }
+
+    public async Task EnsureCurrencyAsync(string code, CancellationToken ct = default)
+    {
+        if (!await db.Currencies.AnyAsync(x => x.Code == code, ct))
+            await db.Currencies.AddAsync(new Currency { Code = code, Name = code }, ct);
+    }
+
     public async Task AddAsync(CurrencyRate rate, CancellationToken ct = default)
     {
         await db.CurrencyRates.AddAsync(rate, ct);

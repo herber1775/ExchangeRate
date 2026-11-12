@@ -7,8 +7,28 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<CurrencyRate> CurrencyRates => Set<CurrencyRate>();
 
+    public DbSet<Currency> Currencies => Set<Currency>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Currency>(e =>
+        {
+            e.HasKey(x => x.Code);
+            e.Property(x => x.Code).HasMaxLength(3);
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.HasData(
+                new Currency { Code = "ARS", Name = "Peso argentino" },
+                new Currency { Code = "BRL", Name = "Real brasileño" },
+                new Currency { Code = "CLP", Name = "Peso chileno" },
+                new Currency { Code = "COP", Name = "Peso colombiano" },
+                new Currency { Code = "EUR", Name = "Euro" },
+                new Currency { Code = "GBP", Name = "Libra esterlina" },
+                new Currency { Code = "JPY", Name = "Yen japonés" },
+                new Currency { Code = "MXN", Name = "Peso mexicano" },
+                new Currency { Code = "PEN", Name = "Sol peruano" },
+                new Currency { Code = "USD", Name = "Dólar estadounidense" });
+        });
+
         modelBuilder.Entity<CurrencyRate>(e =>
         {
             e.HasKey(x => x.Id);

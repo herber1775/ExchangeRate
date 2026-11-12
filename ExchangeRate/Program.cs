@@ -38,7 +38,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.Services.InitializeDatabase();
+await app.Services.InitializeDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
 {

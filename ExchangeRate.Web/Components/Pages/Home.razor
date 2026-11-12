@@ -25,7 +25,12 @@
                     <div class="row g-2 align-items-start mb-3">
                         <div class="col">
                             <label class="form-label">De</label>
-                            <InputText class="form-control text-uppercase" maxlength="3" @bind-Value="convertForm.FromCurrency" />
+                            <InputSelect class="form-select" @bind-Value="convertForm.FromCurrency">
+                                @foreach (var currency in currencies)
+                                {
+                                    <option value="@currency.Code">@currency.Code - @currency.Name</option>
+                                }
+                            </InputSelect>
                             <ValidationMessage For="() => convertForm.FromCurrency" />
                         </div>
                         <div class="col-auto pt-4">
@@ -33,7 +38,12 @@
                         </div>
                         <div class="col">
                             <label class="form-label">A</label>
-                            <InputText class="form-control text-uppercase" maxlength="3" @bind-Value="convertForm.ToCurrency" />
+                            <InputSelect class="form-select" @bind-Value="convertForm.ToCurrency">
+                                @foreach (var currency in currencies)
+                                {
+                                    <option value="@currency.Code">@currency.Code - @currency.Name</option>
+                                }
+                            </InputSelect>
                             <ValidationMessage For="() => convertForm.ToCurrency" />
                         </div>
                     </div>
@@ -123,10 +133,41 @@
     private string? rateError;
     private bool rateBusy;
 
-    protected override void OnInitialized()
+    private List<CurrencyDto> currencies = [];
+
+    protected override async Task OnInitializedAsync()
     {
         if (!Auth.IsAuthenticated)
+        {
             Nav.NavigateTo("login");
+            return;
+        }
+
+        await LoadCurrenciesAsync();
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        var result = await Api.GetCurrenciesAsync();
+        if (result.SessionExpired)
+        {
+            Nav.NavigateTo("login");
+            return;
+        }
+
+        if (result.Value is not { Count: > 0 })
+        {
+            convertError = result.Error;
+            return;
+        }
+
+        currencies = result.Value;
+
+        // SOLO: Si el valor actual ya no existe en la lista, se elige uno válido distinto en cada combo.
+        if (!currencies.Any(c => c.Code == convertForm.FromCurrency))
+            convertForm.FromCurrency = currencies[0].Code;
+        if (!currencies.Any(c => c.Code == convertForm.ToCurrency))
+            convertForm.ToCurrency = (currencies.FirstOrDefault(c => c.Code != convertForm.FromCurrency) ?? currencies[0]).Code;
     }
 
     private void Swap() =>
@@ -170,5 +211,9 @@
 
         rateError = result.Error;
         rateResult = result.Value;
+
+        // SOLO: Una moneda nueva debe aparecer enseguida en los combos.
+        if (result.IsSuccess)
+            await LoadCurrenciesAsync();
     }
 }
