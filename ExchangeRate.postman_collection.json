@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "ExchangeRate API",
-    "description": "Reto técnico .NET. Ejecutar primero 'Login': guarda el token en la variable {{token}}. baseUrl: 8080 (Docker) o 5089 (dotnet run).",
+    "description": "Reto técnico .NET. Ejecutar primero 'Login': guarda el token en la variable {{token}}. baseUrl: 8080 (Docker o dotnet run).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
