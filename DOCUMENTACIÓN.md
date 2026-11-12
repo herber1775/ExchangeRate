@@ -190,6 +190,29 @@ Los errores de validación devuelven el formato estándar `ProblemDetails`:
 
 ## 4. Ejecución
 
+### Ejecución rápida desde la terminal
+
+Ejecutar siempre desde la **carpeta raíz de la solución** (donde están `ExchangeRate.slnx` y `docker-compose.yml`).
+`ExchangeRate.Core` es una biblioteca de clases, no se ejecuta: los proyectos ejecutables son la API
+(`ExchangeRate`) y el front (`ExchangeRate.Web`). Levantar primero la API.
+
+```powershell
+cd "C:\ruta\a\ExchangeRate"
+
+# Terminal 1: API  →  http://localhost:8080
+dotnet run --project ExchangeRate --launch-profile http
+
+# Terminal 2: Front  →  http://localhost:5242
+dotnet run --project ExchangeRate.Web --launch-profile http
+```
+
+Con Docker (levanta API y front a la vez): `docker compose up --build`.
+
+| Opción | Significado |
+|---|---|
+| `--project <carpeta>` | Proyecto a ejecutar (la solución tiene varios). |
+| `--launch-profile http` | Perfil de `Properties/launchSettings.json` (define URL y entorno `Development`). |
+
 ### Con Docker
 ```bash
 docker compose up -d --build     # levanta la API en http://localhost:8080
